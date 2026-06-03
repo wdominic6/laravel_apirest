@@ -62,37 +62,31 @@ class AuthController extends Controller
     }
 
     public function googleLogin(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'name' => 'required|string',
-            'firebase_uid' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'name' => 'required|string',
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    // Busca al usuario por email o lo crea si no existe
+    $user = User::firstOrCreate(
+        ['email' => $request->email],
+        [
+            'name' => $request->name,
+            // Usamos Str::random() para evitar el error de str_random antiguo
+            'password' => bcrypt(Str::random(16)), 
+        ]
+    );
 
-        if (!$user) {
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'firebase_uid' => $request->firebase_uid,
-                'password' => Hash::make(Str::random(16)),
-            ]);
-        } else {
-            if (!$user->firebase_uid) {
-                $user->update(['firebase_uid' => $request->firebase_uid]);
-            }
-        }
+    // Creamos el token de Sanctum para este usuario
+    $token = $user->createToken('auth_token')->plainTextToken;
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Autenticado con Google con éxito',
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user
-        ], 200);
-    }
+    return response()->json([
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+        'user' => $user
+    ], 200);
+}
 
     public function recoverPassword(Request $request)
     {

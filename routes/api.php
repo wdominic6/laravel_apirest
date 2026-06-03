@@ -11,7 +11,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password-recovery', [AuthController::class, 'recoverPassword']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']); // Requisito de Google Auth
-
+Route::post('/auth/google', [App\Http\Controllers\Api\AuthController::class, 'googleLogin']);
 // Rutas Protegidas (Solo accesibles con Token)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
