@@ -58,18 +58,25 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, $id)
     {
+        $product = \App\Models\Product::findOrFail($id);
+
+        if ($product->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No tienes permiso para editar este producto'], 403);
+        }
+
         $request->validate([
-            'name' => 'string|max:255',
-            'price' => 'numeric',
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'price' => 'required|numeric',
         ]);
 
         $product->update($request->all());
 
         return response()->json([
             'message' => 'Producto actualizado con éxito',
-            'data' => $product
+            'product' => $product
         ], 200);
     }
 
