@@ -29,10 +29,12 @@ class ProductController extends Controller
             'longitude' => 'nullable|numeric',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
+
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
         }
+
         $product = Product::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -40,7 +42,9 @@ class ProductController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'image_path' => $imagePath ? url('storage/' . $imagePath) : null,
+            'user_id' => auth()->id(),
         ]);
+
         return response()->json([
             'message' => 'Producto creado con éxito',
             'data' => $product
@@ -60,23 +64,40 @@ class ProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $product = \App\Models\Product::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-        if ($product->user_id !== auth()->id()) {
+        // Solo el dueño puede editar su producto
+        if ($product->user_id !== null && $product->user_id !== auth()->id()) {
             return response()->json(['message' => 'No tienes permiso para editar este producto'], 403);
         }
 
         $request->validate([
-            'name' => 'required|string',
-            'description' => 'required|string',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $product->update($request->all());
+        $data = [
+            'name' => $request->name,
+            'description' => $request->description,
+            'price' => $request->price,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+        ];
+
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+            $data['image_path'] = url('storage/' . $imagePath);
+        }
+
+        $product->update($data);
 
         return response()->json([
             'message' => 'Producto actualizado con éxito',
-            'product' => $product
+            'data' => $product
         ], 200);
     }
 
@@ -85,6 +106,11 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        // Solo el dueño puede eliminar su producto
+        if ($product->user_id !== null && $product->user_id !== auth()->id()) {
+            return response()->json(['message' => 'No tienes permiso para eliminar este producto'], 403);
+        }
+
         $product->delete();
 
         return response()->json([

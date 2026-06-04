@@ -5,18 +5,22 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\AuthController;
 
-// Esto crea automáticamente las 5 rutas del CRUD (GET, POST, PUT, DELETE)
-Route::apiResource('products', ProductController::class);
+// Rutas Públicas (sin token)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/password-recovery', [AuthController::class, 'recoverPassword']);
-Route::post('/google-login', [AuthController::class, 'googleLogin']); // Requisito de Google Auth
-Route::post('/auth/google', [App\Http\Controllers\Api\AuthController::class, 'googleLogin']);
-// Rutas Protegidas (Solo accesibles con Token)
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
+Route::post('/auth/google', [AuthController::class, 'googleLogin']);
+
+// Rutas Protegidas (requieren token de Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // Es recomendable mover tu CRUD de productos aquí dentro para que 
-    // solo los usuarios logueados puedan crear, editar o borrar.
+
+    // Ruta para obtener el usuario actual
+    Route::get('/user', function (Request $request) {
+        return response()->json($request->user(), 200);
+    });
+
+    // CRUD completo de productos (solo usuarios autenticados)
     Route::apiResource('products', ProductController::class);
 });

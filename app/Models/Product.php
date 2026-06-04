@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
         'description',
@@ -15,6 +16,14 @@ class Product extends Model
         'image_path',
         'latitude',
         'longitude',
+        'user_id',
     ];
-}
 
+    /**
+     * El usuario que creó este producto.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+}
