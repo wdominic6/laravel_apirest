@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductController extends Controller
 {
@@ -116,5 +117,22 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Producto eliminado con éxito'
         ], 200);
+    }
+    public function report()
+    {
+        $products = Product::all();
+        return response()->json($products, 200);
+    }
+
+    /**
+     * Export products as a PDF document.
+     */
+    public function exportPdf()
+    {
+        $products = Product::all();
+        $pdf = Pdf::loadView('reports.products', compact('products'));
+        // download('name.pdf') prompts the browser to download the file
+        // stream('name.pdf') would show it in the browser
+        return $pdf->download('reporte_productos.pdf');
     }
 }
