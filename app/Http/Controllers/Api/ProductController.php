@@ -131,8 +131,6 @@ class ProductController extends Controller
     {
         $products = Product::all();
         $pdf = Pdf::loadView('reports.products', compact('products'));
-        // download('name.pdf') prompts the browser to download the file
-        // stream('name.pdf') would show it in the browser
         return $pdf->download('reporte_productos.pdf');
     }
 }
